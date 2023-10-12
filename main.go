@@ -7,10 +7,12 @@ import (
 	"os"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-func main() {
+// LineBotHandler is an exported function to serve as the entry point for Vercel
+func LineBotHandler(w http.ResponseWriter, req *http.Request) {
 	// Initialize log file
 	f, err := os.OpenFile("app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -19,6 +21,12 @@ func main() {
 	defer f.Close()
 
 	log.SetOutput(f)
+
+	// Load .env file
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	// Initialize Line Bot SDK
 	bot, err := linebot.New(
@@ -29,37 +37,31 @@ func main() {
 		log.Fatal("Error initializing Line Bot:", err)
 	}
 
-	// Set up HTTP server
-	http.HandleFunc("/callback", func(w http.ResponseWriter, req *http.Request) {
-		log.Println("Received a callback request.")
-		events, err := bot.ParseRequest(req)
-		if err != nil {
-			log.Println("Error parsing request:", err)
-			http.Error(w, "Can't parse request", http.StatusBadRequest)
-			return
-		}
+	log.Println("Received a callback request.")
+	events, err := bot.ParseRequest(req)
+	if err != nil {
+		log.Println("Error parsing request:", err)
+		http.Error(w, "Can't parse request", http.StatusBadRequest)
+		return
+	}
 
-		for _, event := range events {
-			if event.Type == linebot.EventTypeMessage {
-				switch message := event.Message.(type) {
-				case *linebot.TextMessage:
-					log.Printf("Received a message: %s\n", message.Text)
-					gptResponse, err := fetchGPTResponse(message.Text)
-					if err != nil {
-						log.Println("Error fetching GPT-3 response:", err)
-						return
-					}
-					log.Printf("GPT-3 response: %s\n", gptResponse)
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(gptResponse)).Do(); err != nil {
-						log.Println("Error sending reply:", err)
-					}
+	for _, event := range events {
+		if event.Type == linebot.EventTypeMessage {
+			switch message := event.Message.(type) {
+			case *linebot.TextMessage:
+				log.Printf("Received a message: %s\n", message.Text)
+				gptResponse, err := fetchGPTResponse(message.Text)
+				if err != nil {
+					log.Println("Error fetching GPT-3 response:", err)
+					return
+				}
+				log.Printf("GPT-3 response: %s\n", gptResponse)
+				if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(gptResponse)).Do(); err != nil {
+					log.Println("Error sending reply:", err)
 				}
 			}
 		}
-	})
-
-	log.Println("Server is running on port 30019")
-	log.Fatal(http.ListenAndServe(":30019", nil))
+	}
 }
 
 func fetchGPTResponse(prompt string) (string, error) {
