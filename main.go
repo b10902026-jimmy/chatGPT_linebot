@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
@@ -20,12 +19,6 @@ func main() {
 	defer f.Close()
 
 	log.SetOutput(f)
-
-	// Load .env file
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	// Initialize Line Bot SDK
 	bot, err := linebot.New(
