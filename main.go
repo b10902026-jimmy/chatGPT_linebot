@@ -81,6 +81,8 @@ func fetchGPTResponse(prompt string) (string, error) {
 		return "", err
 	}
 
+	log.Println("API response:", string(resp.Body()))
+
 	var result map[string]interface{}
 	if err = json.Unmarshal(resp.Body(), &result); err != nil {
 		log.Println("Error unmarshaling response:", err)
