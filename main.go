@@ -31,6 +31,7 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println("Received a callback request.")
+
 	events, err := bot.ParseRequest(req)
 	if err != nil {
 		log.Println("Error parsing request:", err)
@@ -47,13 +48,17 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 				var err error
 
 				if message.Text == "你是誰" {
+					log.Println("Processing '你是誰'")
 					gptResponse = "我是由施鈞譯jimmy架設的自動回覆機器人，使用gpt3.5-turbo作為語言模型"
+					log.Println("Processed '你是誰', ready to reply.")
 				} else {
+					log.Println("Processing a GPT-3 request.")
 					gptResponse, err = fetchGPTResponse("使用繁體中文回答：" + message.Text)
 					if err != nil {
 						log.Println("Error fetching GPT-3 response:", err)
 						return
 					}
+					log.Println("Processed GPT-3 request, ready to reply.")
 				}
 
 				log.Printf("GPT-3 response: %s\n", gptResponse)
@@ -78,10 +83,12 @@ func fetchGPTResponse(prompt string) (string, error) {
 		},
 	}
 
+	log.Println("Sending GPT-3 API call")
 	resp, err := client.R().
 		SetHeader("Authorization", "Bearer "+gptAPIKey).
 		SetBody(payload).
 		Post("https://api.openai.com/v1/chat/completions")
+	log.Println("Received GPT-3 API response")
 
 	if err != nil {
 		log.Println("Error making GPT-3 API call:", err)
