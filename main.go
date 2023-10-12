@@ -22,19 +22,11 @@ func LineBotHandler(w http.ResponseWriter, req *http.Request) {
 
 // LineBotHandler is an exported function to serve as the entry point for Vercel
 func handleCallback(w http.ResponseWriter, req *http.Request) {
-	// Initialize log file
-	f, err := os.OpenFile("app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer f.Close()
-
-	log.SetOutput(f)
 
 	// Load .env file
-	err = godotenv.Load()
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	// Initialize Line Bot SDK
@@ -43,7 +35,7 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 		os.Getenv("LINE_CHANNEL_ACCESS_TOKEN"),
 	)
 	if err != nil {
-		log.Fatal("Error initializing Line Bot:", err)
+		log.Println("Error initializing Line Bot:", err)
 	}
 
 	log.Println("Received a callback request.")
