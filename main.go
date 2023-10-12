@@ -6,12 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-// LineBotHandler is an exported function to serve as the entry point for Vercel
 func LineBotHandler(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path == "/callback" {
 		handleCallback(w, req)
@@ -20,16 +20,14 @@ func LineBotHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// LineBotHandler is an exported function to serve as the entry point for Vercel
 func handleCallback(w http.ResponseWriter, req *http.Request) {
-
-	// Initialize Line Bot SDK
 	bot, err := linebot.New(
 		os.Getenv("LINE_CHANNEL_SECRET"),
 		os.Getenv("LINE_CHANNEL_ACCESS_TOKEN"),
 	)
 	if err != nil {
 		log.Println("Error initializing Line Bot:", err)
+		return
 	}
 
 	log.Println("Received a callback request.")
@@ -62,7 +60,6 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 				if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(gptResponse)).Do(); err != nil {
 					log.Println("Error sending reply:", err)
 				}
-
 			}
 		}
 	}
@@ -70,6 +67,7 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 
 func fetchGPTResponse(prompt string) (string, error) {
 	client := resty.New()
+	client.SetTimeout(10 * time.Second) // Added a 10-second timeout
 	gptAPIKey := os.Getenv("GPT_API_KEY")
 
 	payload := map[string]interface{}{
@@ -90,7 +88,10 @@ func fetchGPTResponse(prompt string) (string, error) {
 		return "", err
 	}
 
-	log.Println("API response:", string(resp.Body()))
+	if resp.IsError() {
+		log.Printf("API returned error: %v\n", resp)
+		return "", fmt.Errorf("API returned status code %v", resp.StatusCode())
+	}
 
 	var result map[string]interface{}
 	if err = json.Unmarshal(resp.Body(), &result); err != nil {
