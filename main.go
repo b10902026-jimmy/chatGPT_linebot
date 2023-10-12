@@ -13,6 +13,15 @@ import (
 
 // LineBotHandler is an exported function to serve as the entry point for Vercel
 func LineBotHandler(w http.ResponseWriter, req *http.Request) {
+	if req.URL.Path == "/callback" {
+		handleCallback(w, req)
+	} else {
+		http.Error(w, "Not found", http.StatusNotFound)
+	}
+}
+
+// LineBotHandler is an exported function to serve as the entry point for Vercel
+func handleCallback(w http.ResponseWriter, req *http.Request) {
 	// Initialize log file
 	f, err := os.OpenFile("app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
