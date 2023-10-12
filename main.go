@@ -45,15 +45,24 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
 				log.Printf("Received a message: %s\n", message.Text)
-				gptResponse, err := fetchGPTResponse(message.Text)
-				if err != nil {
-					log.Println("Error fetching GPT-3 response:", err)
-					return
+				var gptResponse string
+				var err error
+
+				if message.Text == "你是誰" {
+					gptResponse = "我是由施鈞譯jimmy架設的自動回覆機器人，使用gpt3.5-turbo作為語言模型"
+				} else {
+					gptResponse, err = fetchGPTResponse("使用繁體中文回答：" + message.Text)
+					if err != nil {
+						log.Println("Error fetching GPT-3 response:", err)
+						return
+					}
 				}
+
 				log.Printf("GPT-3 response: %s\n", gptResponse)
 				if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(gptResponse)).Do(); err != nil {
 					log.Println("Error sending reply:", err)
 				}
+
 			}
 		}
 	}
