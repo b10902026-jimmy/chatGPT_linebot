@@ -78,6 +78,11 @@ func handleCallback(w http.ResponseWriter, req *http.Request) {
 }
 
 func fetchGPTResponse(prompt string) (string, error) {
+	// 截斷或縮短prompt，以確保總字數在GPT-3的限制之內
+	if len(prompt) > 4096 {
+		prompt = prompt[:4000] // 這裡的4000是一個示例數字，需要你根據實際情況來調整
+	}
+
 	client := resty.New()
 	client.SetTimeout(10 * time.Second) // Added a 10-second timeout
 	gptAPIKey := os.Getenv("GPT_API_KEY")
