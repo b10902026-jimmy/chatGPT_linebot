@@ -13,9 +13,16 @@ import (
 )
 
 func LineBotHandler(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path == "/callback" {
+	switch req.URL.Path {
+	case "/callback":
 		handleCallback(w, req)
-	} else {
+	case "/":
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Hello, This is a chatGPT line bot!"))
+	case "/favicon.ico":
+		w.WriteHeader(http.StatusOK)
+		// 在這裡通常會返回一個真正的favicon
+	default:
 		http.Error(w, "Not found", http.StatusNotFound)
 	}
 }
