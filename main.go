@@ -21,7 +21,7 @@ func LineBotHandler(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("Hello, This is a chatGPT line bot!"))
 	case "/favicon.ico":
 		w.WriteHeader(http.StatusOK)
-		// 在這裡通常會返回一個真正的favicon
+		http.ServeFile(w, req, "open-ai.ico")
 	default:
 		http.Error(w, "Not found", http.StatusNotFound)
 	}
